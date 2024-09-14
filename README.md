@@ -1,5 +1,7 @@
 # PCB-Investigator-Scripts
 PCB-Investigator C# extention scripts to automate E-CAD related tasks. www.PCB-Investigator.com
+SDK https://www.pcb-investigator.com/sites/default/files/documents/InterfaceDocumentation/html/09762912-d692-a3d7-9321-6b1a96b536ab.htm
+
 
 PCB-Investigator: Advanced PCB CAM and Analysis Software
 
