@@ -1,0 +1,83 @@
+using PCB_Investigator.Automation.DBFilter;
+using PCB_Investigator.Automation.DesignHistory;
+using PCB_Investigator.PCBIWindows;
+using PCBI.Automation;
+using PCBI.MathUtils;
+using PCBI.Plugin.Interfaces;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Forms;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace PCB_Investigator_API_Examples
+{
+/// <summary>
+/// This is example code to show ways to use the PCB-Investigator API
+/// </summary>
+    private static partial class PCB_Investigator_API_Example_Class
+    {
+        /// <summary>
+        /// Example method to find the thinnest trace width on the top signal layer of the current design by using the PCB-Investigator API.
+        /// </summary>
+        private static string Example_FindThinnestTraceWidthOnTopLayer(IPCBIWindow pcbi, IStep step, CancellationToken? cancelToken)
+        {
+            // Check if a job is loaded
+            if (!pcbi.JobIsLoaded) return "No job is loaded.";
+        
+            // Get the unit the user wants to see in the UI (metric or imperial)
+            bool showMetricUnit = pcbi.GetUnit();  //this is the unit, the user wants to see in the UI (true=metric, false=imperial)
+            // Get the matrix of the current job
+            IMatrix matrix = pcbi.GetMatrix();
+        
+            double smallestLineWidthMils = double.MaxValue;
+        
+            // Get the top signal layer
+            string sigLayer = matrix.GetTopSignalLayer();
+            IODBLayer layer = step.GetLayer(sigLayer) as IODBLayer;
+            if (layer != null)
+            {
+                // Iterate through all objects in the layer to find the thinnest trace
+                foreach (IObject obj in layer.GetAllLayerObjects())
+                {
+                    if (cancelToken.HasValue && cancelToken.Value.IsCancellationRequested) return "Operation was cancelled.";
+        
+                    if (obj is IODBObject odbObj && odbObj.Type == IObjectType.Line)
+                    {
+                        double lineWidthMils = odbObj.GetDiameter(); //always in mils
+                        if (lineWidthMils < smallestLineWidthMils)
+                        {
+                            smallestLineWidthMils = lineWidthMils;
+                        }
+                    }
+                }
+            }
+            else return "The top signal layer is not found in the current step.";
+        
+            if (smallestLineWidthMils < double.MaxValue)
+            {
+                if (showMetricUnit)
+                {
+                    return "The thinnest trace width on the top layer in the current design is "
+                           + IMath.Mils2MM(smallestLineWidthMils).ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + " mm.";
+                }
+                else
+                {
+                    return "The thinnest trace width on the top layer in the current design is "
+                           + smallestLineWidthMils.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + " mils.";
+                }
+            }
+            else
+            {
+                return "There are no recognized line objects in the top signal layer.";
+            }
+        }
+        
+    }
+}
